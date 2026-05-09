@@ -24,6 +24,12 @@ public class User {
     @Column(length = 255, nullable = false)
     private String password;
 
+    @Column(length = 50, unique = true, nullable = false)
+    private String nickname;
+
+    @Column(length = 100, unique = true, nullable = false)
+    private String email;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

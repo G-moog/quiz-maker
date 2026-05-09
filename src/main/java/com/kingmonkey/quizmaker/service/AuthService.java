@@ -22,12 +22,20 @@ public class AuthService {
 
     public LoginResponse register(RegisterRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new RuntimeException("이미 존재하는 아이디입니다.");
+            throw new RuntimeException("이미 사용 중인 아이디입니다.");
+        }
+        if (userRepository.existsByNickname(request.getNickname())) {
+            throw new RuntimeException("이미 사용 중인 닉네임입니다.");
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("이미 사용 중인 이메일입니다.");
         }
 
         User user = new User();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setNickname(request.getNickname());
+        user.setEmail(request.getEmail());
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getUsername());
