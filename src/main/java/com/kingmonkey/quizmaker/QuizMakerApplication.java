@@ -1,4 +1,4 @@
-package com.kingmonkey.quiz_maker;
+package com.kingmonkey.quizmaker;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

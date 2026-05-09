@@ -1,4 +1,4 @@
-package com.kingmonkey.quiz_maker;
+package com.kingmonkey.quizmaker;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
