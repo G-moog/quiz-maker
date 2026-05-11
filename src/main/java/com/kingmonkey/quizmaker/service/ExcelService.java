@@ -1,7 +1,7 @@
 package com.kingmonkey.quizmaker.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import com.kingmonkey.quizmaker.entity.Question;
 import com.kingmonkey.quizmaker.entity.QuestionSet;
 import com.kingmonkey.quizmaker.repository.QuestionRepository;
