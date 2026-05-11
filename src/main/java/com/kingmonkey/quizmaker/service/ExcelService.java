@@ -179,7 +179,7 @@ public class ExcelService {
                 for (int j = 0; j < opts.size() && j < 4; j++) {
                     row.createCell(3 + j).setCellValue(opts.get(j));
                 }
-                row.createCell(7).setCellValue(q.getAnswerIndex() != null ? q.getAnswerIndex() + 1 : "");
+                row.createCell(7).setCellValue(q.getAnswerIndex() != null ? String.valueOf(q.getAnswerIndex() + 1) : "");
             } else {
                 row.createCell(7).setCellValue(q.getAnswer() != null ? q.getAnswer() : "");
             }
