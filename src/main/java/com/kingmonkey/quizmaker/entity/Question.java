@@ -1,9 +1,12 @@
 package com.kingmonkey.quizmaker.entity;
 
+import com.kingmonkey.quizmaker.converter.StringListConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Entity
 @Table(name = "questions")
@@ -29,6 +32,10 @@ public class Question {
 
     @Column(length = 500)
     private String answer;
+
+    @Convert(converter = StringListConverter.class)
+    @Column(columnDefinition = "JSON")
+    private List<String> answers;
 
     @Column(columnDefinition = "TEXT")
     private String explanation;

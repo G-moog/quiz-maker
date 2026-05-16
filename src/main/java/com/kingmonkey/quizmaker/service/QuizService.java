@@ -117,6 +117,7 @@ public class QuizService {
         question.setOptions(request.getOptions());
         question.setAnswerIndex(request.getAnswerIndex());
         question.setAnswer(request.getAnswer());
+        question.setAnswers(request.getAnswers());
         question.setExplanation(request.getExplanation());
         question.setOrderIndex(request.getOrderIndex() != null ? request.getOrderIndex() : 0);
     }

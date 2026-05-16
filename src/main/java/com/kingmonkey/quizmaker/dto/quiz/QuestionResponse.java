@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,6 +17,7 @@ public class QuestionResponse {
     private String options;
     private Integer answerIndex;
     private String answer;
+    private List<String> answers;
     private String explanation;
     private Integer orderIndex;
 
@@ -26,6 +29,7 @@ public class QuestionResponse {
                 question.getOptions(),
                 question.getAnswerIndex(),
                 question.getAnswer(),
+                question.getAnswers(),
                 question.getExplanation(),
                 question.getOrderIndex()
         );
