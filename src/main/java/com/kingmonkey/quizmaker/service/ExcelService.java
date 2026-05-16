@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -121,13 +122,27 @@ public class ExcelService {
                             String ansStr = cellStr(row, 7);
                             q.setAnswerIndex(ansStr.isBlank() ? 0 : Integer.parseInt(ansStr.trim()) - 1);
                         }
-                        case "주관식" -> {
+                        case "주관식", "short_answer", "short" -> {
                             q.setType("short_answer");
-                            q.setAnswer(cellStr(row, 7));
+                            // 정답 컬럼(7) 우선, 없으면 보기1 컬럼(3)에서 읽음
+                            String ans = cellStr(row, 7);
+                            if (ans.isBlank()) ans = cellStr(row, 3);
+                            q.setAnswer(ans);
                         }
                         case "OX" -> {
                             q.setType("ox");
                             q.setAnswer(cellStr(row, 7));
+                        }
+                        case "fill", "빈칸" -> {
+                            q.setType("fill");
+                            // 보기1 컬럼(3)에 쉼표로 구분된 정답 목록
+                            String answersStr = cellStr(row, 3);
+                            if (!answersStr.isBlank()) {
+                                q.setAnswers(Arrays.stream(answersStr.split(","))
+                                        .map(String::trim)
+                                        .filter(s -> !s.isBlank())
+                                        .toList());
+                            }
                         }
                         default -> { continue; }
                     }
@@ -180,6 +195,12 @@ public class ExcelService {
                     row.createCell(3 + j).setCellValue(opts.get(j));
                 }
                 row.createCell(7).setCellValue(q.getAnswerIndex() != null ? String.valueOf(q.getAnswerIndex() + 1) : "");
+            } else if ("fill".equals(q.getType())) {
+                // fill 유형: 정답 목록을 보기1 컬럼에 쉼표로 구분하여 저장
+                List<String> fillAnswers = q.getAnswers();
+                if (fillAnswers != null && !fillAnswers.isEmpty()) {
+                    row.createCell(3).setCellValue(String.join(", ", fillAnswers));
+                }
             } else {
                 row.createCell(7).setCellValue(q.getAnswer() != null ? q.getAnswer() : "");
             }
@@ -218,6 +239,7 @@ public class ExcelService {
             case "multiple_choice" -> "객관식";
             case "short_answer" -> "주관식";
             case "ox" -> "OX";
+            case "fill" -> "fill";
             default -> type;
         };
     }
