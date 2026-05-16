@@ -194,9 +194,22 @@ public class ExcelService {
         }
     }
 
+    // autoSizeColumn()은 libfreetype 의존성 때문에 Linux 서버에서 실패 → 고정 너비로 대체
+    private static final int[] COLUMN_WIDTHS = {
+            1500,   // 번호
+            3000,   // 유형
+            15000,  // 문제
+            8000,   // 보기1
+            8000,   // 보기2
+            8000,   // 보기3
+            8000,   // 보기4
+            6000,   // 정답
+            15000   // 해설
+    };
+
     private void autoSize(Sheet sheet) {
-        for (int i = 0; i < HEADERS.length; i++) {
-            sheet.autoSizeColumn(i);
+        for (int i = 0; i < COLUMN_WIDTHS.length; i++) {
+            sheet.setColumnWidth(i, COLUMN_WIDTHS[i]);
         }
     }
 
