@@ -68,7 +68,7 @@ public class ExcelService {
         // 안내 행 (1행)
         Row guideRow = sheet.createRow(0);
         Cell guideCell = guideRow.createCell(0);
-        guideCell.setCellValue("※ 유형: 객관식/주관식/OX | 정답: 객관식=1~4숫자, 주관식=텍스트, OX=O또는X | 보기는 객관식만 입력");
+        guideCell.setCellValue("※ 유형: 객관식/주관식/OX/fill | 정답: 객관식=1~4숫자, 주관식=텍스트, OX=O또는X, fill=쉼표구분 정답목록(예: 서울,경기) | 보기는 객관식만 입력");
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
         CellStyle guideStyle = workbook.createCellStyle();
         guideStyle.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
@@ -82,6 +82,7 @@ public class ExcelService {
         writeExampleRow(sheet, 2, "1", "객관식", "대한민국의 수도는?", "서울", "부산", "대구", "인천", "1", "수도는 서울");
         writeExampleRow(sheet, 3, "2", "주관식", "세계에서 가장 높은 산은?", "", "", "", "", "에베레스트", "히말라야 산맥에 위치");
         writeExampleRow(sheet, 4, "3", "OX", "지구는 태양 주위를 공전한다", "", "", "", "", "O", "공전 주기는 약 365일");
+        writeExampleRow(sheet, 5, "4", "fill", "대한민국의 수도는 ___이고, 가장 큰 도시도 ___이다.", "", "", "", "", "서울,서울", "빈칸이 2개이므로 정답도 쉼표로 2개 입력");
 
         autoSize(sheet);
         return workbook;
