@@ -25,61 +25,37 @@ public class ExportController {
     private final ExcelService excelService;
     private final JwtUtil jwtUtil;
 
-    /** 진단용 엔드포인트: ExcelService 호출 없이 컨트롤러 도달 여부만 확인 */
-    @GetMapping("/ping")
-    public ResponseEntity<String> ping(
-            @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        String token = resolveToken(authHeader, null);
-        boolean valid = token != null && jwtUtil.validateToken(token);
-        return ResponseEntity.ok("reached=true, tokenValid=" + valid);
-    }
-
     @GetMapping("/set/{setId}")
-    public ResponseEntity<?> exportSet(
+    public ResponseEntity<byte[]> exportSet(
             @PathVariable Long setId,
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestParam(value = "token", required = false) String queryToken) throws IOException {
         if (!isAuthenticated(authHeader, queryToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        try {
-            return toResponse(excelService.createSetWorkbook(setId), "questions_" + setId + ".xlsx");
-        } catch (Throwable t) {
-            return ResponseEntity.status(500)
-                    .body(t.getClass().getName() + ": " + t.getMessage());
-        }
+        return toResponse(excelService.createSetWorkbook(setId), "questions_" + setId + ".xlsx");
     }
 
     @GetMapping("/all")
-    public ResponseEntity<?> exportAll(
+    public ResponseEntity<byte[]> exportAll(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestParam(value = "token", required = false) String queryToken) throws IOException {
         String token = resolveToken(authHeader, queryToken);
         if (token == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        try {
-            String username = jwtUtil.extractUsername(token);
-            return toResponse(excelService.createAllWorkbook(username), "all_questions.xlsx");
-        } catch (Throwable t) {
-            return ResponseEntity.status(500)
-                    .body(t.getClass().getName() + ": " + t.getMessage());
-        }
+        String username = jwtUtil.extractUsername(token);
+        return toResponse(excelService.createAllWorkbook(username), "all_questions.xlsx");
     }
 
     @GetMapping("/template")
-    public ResponseEntity<?> exportTemplate(
+    public ResponseEntity<byte[]> exportTemplate(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestParam(value = "token", required = false) String queryToken) throws IOException {
         if (!isAuthenticated(authHeader, queryToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        try {
-            return toResponse(excelService.createTemplateWorkbook(), "upload_template.xlsx");
-        } catch (Throwable t) {
-            return ResponseEntity.status(500)
-                    .body(t.getClass().getName() + ": " + t.getMessage());
-        }
+        return toResponse(excelService.createTemplateWorkbook(), "upload_template.xlsx");
     }
 
     @ExceptionHandler(RuntimeException.class)
