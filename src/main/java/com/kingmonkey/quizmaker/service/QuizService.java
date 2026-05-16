@@ -45,6 +45,19 @@ public class QuizService {
         return QuestionSetResponse.from(questionSetRepository.save(set));
     }
 
+    public QuestionSetResponse updateSet(Long setId, String username, QuestionSetRequest request) {
+        QuestionSet set = findSet(setId);
+
+        if (!set.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("수정 권한이 없습니다.");
+        }
+
+        set.setTitle(request.getTitle());
+        set.setSubject(request.getSubject());
+
+        return QuestionSetResponse.from(questionSetRepository.save(set));
+    }
+
     public void deleteSet(Long setId, String username) {
         QuestionSet set = findSet(setId);
 

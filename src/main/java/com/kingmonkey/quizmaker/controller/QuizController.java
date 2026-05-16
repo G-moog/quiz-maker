@@ -33,6 +33,14 @@ public class QuizController {
         return ResponseEntity.ok(quizService.createSet(getUsername(authHeader), request));
     }
 
+    @PutMapping("/sets/{setId}")
+    public ResponseEntity<QuestionSetResponse> updateSet(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long setId,
+            @RequestBody QuestionSetRequest request) {
+        return ResponseEntity.ok(quizService.updateSet(setId, getUsername(authHeader), request));
+    }
+
     @DeleteMapping("/sets/{setId}")
     public ResponseEntity<Void> deleteSet(
             @RequestHeader("Authorization") String authHeader,
