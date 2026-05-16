@@ -135,8 +135,9 @@ public class ExcelService {
                         }
                         case "fill", "빈칸" -> {
                             q.setType("fill");
-                            // 보기1 컬럼(3)에 쉼표로 구분된 정답 목록
-                            String answersStr = cellStr(row, 3);
+                            // 정답 컬럼(7)에서 쉼표 구분 정답 읽기, 없으면 보기1 컬럼(3) fallback
+                            String answersStr = cellStr(row, 7);
+                            if (answersStr.isBlank()) answersStr = cellStr(row, 3);
                             if (!answersStr.isBlank()) {
                                 q.setAnswers(Arrays.stream(answersStr.split(","))
                                         .map(String::trim)
@@ -196,10 +197,10 @@ public class ExcelService {
                 }
                 row.createCell(7).setCellValue(q.getAnswerIndex() != null ? String.valueOf(q.getAnswerIndex() + 1) : "");
             } else if ("fill".equals(q.getType())) {
-                // fill 유형: 정답 목록을 보기1 컬럼에 쉼표로 구분하여 저장
+                // fill 유형: 정답 목록을 정답 컬럼(7)에 쉼표로 구분하여 저장
                 List<String> fillAnswers = q.getAnswers();
                 if (fillAnswers != null && !fillAnswers.isEmpty()) {
-                    row.createCell(3).setCellValue(String.join(", ", fillAnswers));
+                    row.createCell(7).setCellValue(String.join(", ", fillAnswers));
                 }
             } else {
                 row.createCell(7).setCellValue(q.getAnswer() != null ? q.getAnswer() : "");
