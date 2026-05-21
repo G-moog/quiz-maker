@@ -17,5 +17,7 @@ public class QuestionRequest {
     private String answer;
     private List<String> answers;
     private String explanation;
+    private String questionImageUrl;
+    private String answerImageUrl;
     private Integer orderIndex;
 }

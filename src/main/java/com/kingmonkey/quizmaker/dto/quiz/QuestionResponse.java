@@ -19,6 +19,8 @@ public class QuestionResponse {
     private String answer;
     private List<String> answers;
     private String explanation;
+    private String questionImageUrl;
+    private String answerImageUrl;
     private Integer orderIndex;
 
     public static QuestionResponse from(Question question) {
@@ -31,6 +33,8 @@ public class QuestionResponse {
                 question.getAnswer(),
                 question.getAnswers(),
                 question.getExplanation(),
+                question.getQuestionImageUrl(),
+                question.getAnswerImageUrl(),
                 question.getOrderIndex()
         );
     }

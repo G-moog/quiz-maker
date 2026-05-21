@@ -1,6 +1,8 @@
 package com.kingmonkey.quizmaker.controller;
 
 import com.kingmonkey.quizmaker.config.JwtUtil;
+import com.kingmonkey.quizmaker.dto.quiz.GradeRequest;
+import com.kingmonkey.quizmaker.dto.quiz.GradeResponse;
 import com.kingmonkey.quizmaker.dto.quiz.QuestionRequest;
 import com.kingmonkey.quizmaker.dto.quiz.QuestionResponse;
 import com.kingmonkey.quizmaker.dto.quiz.QuestionSetRequest;
@@ -72,6 +74,18 @@ public class QuizController {
     public ResponseEntity<Void> deleteQuestion(@PathVariable Long questionId) {
         quizService.deleteQuestion(questionId);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 채점 API
+     * - fill 유형: 채점 없이 answers 배열만 반환
+     * - 객관식/주관식/OX: 정오 판정 + 정답 + 해설 반환
+     */
+    @PostMapping("/questions/{questionId}/grade")
+    public ResponseEntity<GradeResponse> gradeQuestion(
+            @PathVariable Long questionId,
+            @RequestBody GradeRequest request) {
+        return ResponseEntity.ok(quizService.gradeQuestion(questionId, request));
     }
 
     @ExceptionHandler(RuntimeException.class)

@@ -1,5 +1,7 @@
 package com.kingmonkey.quizmaker.service;
 
+import com.kingmonkey.quizmaker.dto.quiz.GradeRequest;
+import com.kingmonkey.quizmaker.dto.quiz.GradeResponse;
 import com.kingmonkey.quizmaker.dto.quiz.QuestionRequest;
 import com.kingmonkey.quizmaker.dto.quiz.QuestionResponse;
 import com.kingmonkey.quizmaker.dto.quiz.QuestionSetRequest;
@@ -101,6 +103,46 @@ public class QuizService {
         questionRepository.delete(question);
     }
 
+    @Transactional(readOnly = true)
+    public GradeResponse gradeQuestion(Long questionId, GradeRequest request) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 문항입니다."));
+
+        String type = question.getType();
+
+        // fill 유형: 채점 없이 정답 배열만 반환
+        if ("fill".equals(type)) {
+            return GradeResponse.builder()
+                    .type("fill")
+                    .answers(question.getAnswers())
+                    .build();
+        }
+
+        // 객관식
+        if ("multiple_choice".equals(type)) {
+            boolean correct = question.getAnswerIndex() != null
+                    && question.getAnswerIndex().equals(request.getUserAnswerIndex());
+            return GradeResponse.builder()
+                    .type(type)
+                    .correct(correct)
+                    .correctAnswerIndex(question.getAnswerIndex())
+                    .explanation(question.getExplanation())
+                    .build();
+        }
+
+        // 주관식 / OX
+        String correctAnswer = question.getAnswer();
+        boolean correct = correctAnswer != null
+                && correctAnswer.trim().equalsIgnoreCase(
+                        request.getUserAnswer() == null ? "" : request.getUserAnswer().trim());
+        return GradeResponse.builder()
+                .type(type)
+                .correct(correct)
+                .correctAnswer(correctAnswer)
+                .explanation(question.getExplanation())
+                .build();
+    }
+
     private User findUser(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
@@ -119,6 +161,8 @@ public class QuizService {
         question.setAnswer(request.getAnswer());
         question.setAnswers(request.getAnswers());
         question.setExplanation(request.getExplanation());
+        question.setQuestionImageUrl(request.getQuestionImageUrl());
+        question.setAnswerImageUrl(request.getAnswerImageUrl());
         question.setOrderIndex(request.getOrderIndex() != null ? request.getOrderIndex() : 0);
     }
 }

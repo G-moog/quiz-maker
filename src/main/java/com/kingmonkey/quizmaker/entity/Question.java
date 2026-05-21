@@ -40,6 +40,12 @@ public class Question {
     @Column(columnDefinition = "TEXT")
     private String explanation;
 
+    @Column(length = 500)
+    private String questionImageUrl;
+
+    @Column(length = 500)
+    private String answerImageUrl;
+
     @Column(nullable = false)
     private Integer orderIndex = 0;
 
