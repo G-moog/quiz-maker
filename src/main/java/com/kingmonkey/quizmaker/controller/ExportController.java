@@ -33,7 +33,8 @@ public class ExportController {
         if (!isAuthenticated(authHeader, queryToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return toResponse(excelService.createSetWorkbook(setId), "questions_" + setId + ".xlsx");
+        String username = jwtUtil.extractUsername(resolveToken(authHeader, queryToken));
+        return toResponse(excelService.createSetWorkbook(setId, username), "questions_" + setId + ".xlsx");
     }
 
     @GetMapping("/all")

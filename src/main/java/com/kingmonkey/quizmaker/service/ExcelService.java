@@ -12,6 +12,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -30,9 +31,9 @@ public class ExcelService {
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
-    public Workbook createSetWorkbook(Long setId) {
-        QuestionSet set = questionSetRepository.findById(setId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 문제집입니다."));
+    @Transactional(readOnly = true)
+    public Workbook createSetWorkbook(Long setId, String username) {
+        QuestionSet set = findOwnedSet(setId, username, "조회 권한이 없습니다.");
         List<Question> questions = questionRepository.findByQuestionSetIdOrderByOrderIndexAsc(setId);
 
         Workbook workbook = new XSSFWorkbook();
@@ -88,9 +89,9 @@ public class ExcelService {
         return workbook;
     }
 
-    public List<Question> parseExcel(MultipartFile file, Long setId) throws IOException {
-        QuestionSet set = questionSetRepository.findById(setId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 문제집입니다."));
+    @Transactional(readOnly = true)
+    public List<Question> parseExcel(MultipartFile file, Long setId, String username) throws IOException {
+        QuestionSet set = findOwnedSet(setId, username, "수정 권한이 없습니다.");
 
         List<Question> result = new ArrayList<>();
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
@@ -160,6 +161,16 @@ public class ExcelService {
     }
 
     // ── 내부 헬퍼 ──────────────────────────────────────────
+
+    // 문제집을 만든 계정만 내려받거나 올릴 수 있다
+    private QuestionSet findOwnedSet(Long setId, String username, String deniedMessage) {
+        QuestionSet set = questionSetRepository.findById(setId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 문제집입니다."));
+        if (!set.getUser().getUsername().equals(username)) {
+            throw new RuntimeException(deniedMessage);
+        }
+        return set;
+    }
 
     private void writeHeader(Workbook workbook, Sheet sheet) {
         CellStyle headerStyle = workbook.createCellStyle();

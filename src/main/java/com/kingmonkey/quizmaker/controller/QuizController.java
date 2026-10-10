@@ -52,27 +52,33 @@ public class QuizController {
     }
 
     @GetMapping("/sets/{setId}/questions")
-    public ResponseEntity<List<QuestionResponse>> getQuestions(@PathVariable Long setId) {
-        return ResponseEntity.ok(quizService.getQuestions(setId));
+    public ResponseEntity<List<QuestionResponse>> getQuestions(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long setId) {
+        return ResponseEntity.ok(quizService.getQuestions(setId, getUsername(authHeader)));
     }
 
     @PostMapping("/sets/{setId}/questions")
     public ResponseEntity<QuestionResponse> addQuestion(
+            @RequestHeader("Authorization") String authHeader,
             @PathVariable Long setId,
             @RequestBody QuestionRequest request) {
-        return ResponseEntity.ok(quizService.addQuestion(setId, request));
+        return ResponseEntity.ok(quizService.addQuestion(setId, getUsername(authHeader), request));
     }
 
     @PutMapping("/questions/{questionId}")
     public ResponseEntity<QuestionResponse> updateQuestion(
+            @RequestHeader("Authorization") String authHeader,
             @PathVariable Long questionId,
             @RequestBody QuestionRequest request) {
-        return ResponseEntity.ok(quizService.updateQuestion(questionId, request));
+        return ResponseEntity.ok(quizService.updateQuestion(questionId, getUsername(authHeader), request));
     }
 
     @DeleteMapping("/questions/{questionId}")
-    public ResponseEntity<Void> deleteQuestion(@PathVariable Long questionId) {
-        quizService.deleteQuestion(questionId);
+    public ResponseEntity<Void> deleteQuestion(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long questionId) {
+        quizService.deleteQuestion(questionId, getUsername(authHeader));
         return ResponseEntity.ok().build();
     }
 
@@ -83,9 +89,10 @@ public class QuizController {
      */
     @PostMapping("/questions/{questionId}/grade")
     public ResponseEntity<GradeResponse> gradeQuestion(
+            @RequestHeader("Authorization") String authHeader,
             @PathVariable Long questionId,
             @RequestBody GradeRequest request) {
-        return ResponseEntity.ok(quizService.gradeQuestion(questionId, request));
+        return ResponseEntity.ok(quizService.gradeQuestion(questionId, getUsername(authHeader), request));
     }
 
     @ExceptionHandler(RuntimeException.class)

@@ -49,10 +49,7 @@ public class QuizService {
 
     public QuestionSetResponse updateSet(Long setId, String username, QuestionSetRequest request) {
         QuestionSet set = findSet(setId);
-
-        if (!set.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("수정 권한이 없습니다.");
-        }
+        checkOwner(set, username, "수정 권한이 없습니다.");
 
         set.setTitle(request.getTitle());
         set.setSubject(request.getSubject());
@@ -62,24 +59,24 @@ public class QuizService {
 
     public void deleteSet(Long setId, String username) {
         QuestionSet set = findSet(setId);
-
-        if (!set.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("삭제 권한이 없습니다.");
-        }
+        checkOwner(set, username, "삭제 권한이 없습니다.");
 
         questionSetRepository.delete(set);
     }
 
     @Transactional(readOnly = true)
-    public List<QuestionResponse> getQuestions(Long setId) {
+    public List<QuestionResponse> getQuestions(Long setId, String username) {
+        checkOwner(findSet(setId), username, "조회 권한이 없습니다.");
+
         return questionRepository.findByQuestionSetIdOrderByOrderIndexAsc(setId)
                 .stream()
                 .map(QuestionResponse::from)
                 .toList();
     }
 
-    public QuestionResponse addQuestion(Long setId, QuestionRequest request) {
+    public QuestionResponse addQuestion(Long setId, String username, QuestionRequest request) {
         QuestionSet set = findSet(setId);
+        checkOwner(set, username, "수정 권한이 없습니다.");
 
         Question question = new Question();
         applyRequest(question, request);
@@ -88,25 +85,26 @@ public class QuizService {
         return QuestionResponse.from(questionRepository.save(question));
     }
 
-    public QuestionResponse updateQuestion(Long questionId, QuestionRequest request) {
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 문항입니다."));
+    public QuestionResponse updateQuestion(Long questionId, String username, QuestionRequest request) {
+        Question question = findQuestion(questionId);
+        checkOwner(question.getQuestionSet(), username, "수정 권한이 없습니다.");
 
         applyRequest(question, request);
 
         return QuestionResponse.from(questionRepository.save(question));
     }
 
-    public void deleteQuestion(Long questionId) {
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 문항입니다."));
+    public void deleteQuestion(Long questionId, String username) {
+        Question question = findQuestion(questionId);
+        checkOwner(question.getQuestionSet(), username, "삭제 권한이 없습니다.");
+
         questionRepository.delete(question);
     }
 
     @Transactional(readOnly = true)
-    public GradeResponse gradeQuestion(Long questionId, GradeRequest request) {
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 문항입니다."));
+    public GradeResponse gradeQuestion(Long questionId, String username, GradeRequest request) {
+        Question question = findQuestion(questionId);
+        checkOwner(question.getQuestionSet(), username, "조회 권한이 없습니다.");
 
         String type = question.getType();
 
@@ -151,6 +149,18 @@ public class QuizService {
     private QuestionSet findSet(Long setId) {
         return questionSetRepository.findById(setId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 세트입니다."));
+    }
+
+    private Question findQuestion(Long questionId) {
+        return questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 문항입니다."));
+    }
+
+    // 문제집을 만든 계정만 문제집과 그 문항을 보고 고칠 수 있다
+    private void checkOwner(QuestionSet set, String username, String deniedMessage) {
+        if (!set.getUser().getUsername().equals(username)) {
+            throw new RuntimeException(deniedMessage);
+        }
     }
 
     private void applyRequest(Question question, QuestionRequest request) {

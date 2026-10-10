@@ -30,9 +30,10 @@ public class ImportController {
 
     @PostMapping("/set/{setId}")
     public ResponseEntity<Map<String, String>> importToExistingSet(
+            @RequestHeader("Authorization") String authHeader,
             @PathVariable Long setId,
             @RequestParam("file") MultipartFile file) throws IOException {
-        List<Question> questions = excelService.parseExcel(file, setId);
+        List<Question> questions = excelService.parseExcel(file, setId, getUsername(authHeader));
         questionRepository.saveAll(questions);
         return ResponseEntity.ok(Map.of("message", questions.size() + "개의 문항이 업로드되었습니다."));
     }
@@ -52,7 +53,7 @@ public class ImportController {
         set.setUser(user);
         questionSetRepository.save(set);
 
-        List<Question> questions = excelService.parseExcel(file, set.getId());
+        List<Question> questions = excelService.parseExcel(file, set.getId(), user.getUsername());
         questionRepository.saveAll(questions);
 
         return ResponseEntity.ok(Map.of(
