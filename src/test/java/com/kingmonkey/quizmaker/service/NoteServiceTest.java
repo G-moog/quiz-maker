@@ -19,9 +19,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -314,8 +318,44 @@ class NoteServiceTest {
         assertThat(res.getResolvedAt()).isNotNull();
         assertThat(res.getUpdatedAt()).isEqualTo(res.getResolvedAt());
         assertThat(res.getContent()).isEqualTo("질문 5");
-        // DATETIME(6) 에 반올림 없이 그대로 들어가도록 마이크로초까지만
-        assertThat(res.getResolvedAt().getNano() % 1000).isZero();
+        // DATETIME(6) 에 반올림 없이 그대로 들어가고 응답이 "…T13:40:00.123Z" 꼴이 되도록 밀리초까지만
+        assertThat(res.getResolvedAt().getNano() % 1_000_000).isZero();
+        // 저장 값은 UTC — 응답 시각이 지금(Instant)과 거의 같아야 한다(서버 시간대만큼 어긋나지 않음)
+        assertThat(Duration.between(res.getResolvedAt(), Instant.now()).abs()).isLessThan(Duration.ofMinutes(1));
+        assertThat(n.getResolvedAt()).isEqualTo(LocalDateTime.ofInstant(res.getResolvedAt(), ZoneOffset.UTC));
+    }
+
+    @Test
+    void currentTime_은_서버_시간대와_상관없이_UTC() {
+        TimeZone before = TimeZone.getDefault();
+        try {
+            for (String zone : List.of("Asia/Seoul", "UTC", "America/Los_Angeles")) {
+                TimeZone.setDefault(TimeZone.getTimeZone(zone));
+                LocalDateTime now = QuestionNote.currentTime();
+
+                assertThat(Duration.between(now.toInstant(ZoneOffset.UTC), Instant.now()).abs())
+                        .as("JVM 시간대 %s", zone)
+                        .isLessThan(Duration.ofMinutes(1));
+                assertThat(now.getNano() % 1_000_000).isZero();
+            }
+        } finally {
+            TimeZone.setDefault(before);
+        }
+    }
+
+    @Test
+    void 응답_시각은_저장한_UTC_값에_Z_를_붙인_것() {
+        QuestionNote n = note(5L, owner, LocalDateTime.of(2026, 10, 20, 23, 0, 0, 123_000_000));
+        n.setUpdatedAt(LocalDateTime.of(2026, 10, 20, 23, 30));
+
+        NoteResponse res = NoteResponse.from(n);
+
+        // 저장 값은 UTC. 해결 시각 UTC 10/20 23:00 = 한국 시각 10/21 08:00 — 앱·도구가 기기 시각으로 바꿔 보여 준다
+        assertThat(res.getCreatedAt()).isEqualTo(Instant.parse("2026-10-20T08:00:00Z"));
+        assertThat(res.getResolvedAt()).isEqualTo(Instant.parse("2026-10-20T23:00:00.123Z"));
+        assertThat(res.getResolvedAt().toString()).isEqualTo("2026-10-20T23:00:00.123Z");
+        assertThat(res.getUpdatedAt()).isEqualTo(Instant.parse("2026-10-20T23:30:00Z"));
+        assertThat(NoteResponse.from(note(6L, owner, null)).getResolvedAt()).isNull();
     }
 
     @Test
@@ -327,7 +367,8 @@ class NoteServiceTest {
 
         NoteResponse res = noteService.updateNote(5L, "owner", new NoteUpdateRequest("고친 질문", true));
 
-        assertThat(res.getResolvedAt()).isEqualTo(first);
+        assertThat(res.getResolvedAt()).isEqualTo(first.toInstant(ZoneOffset.UTC));
+        assertThat(n.getResolvedAt()).isEqualTo(first);
         assertThat(res.getContent()).isEqualTo("고친 질문");
     }
 

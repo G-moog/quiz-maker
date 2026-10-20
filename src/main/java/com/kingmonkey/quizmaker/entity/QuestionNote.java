@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
 // 문제를 풀다 떠오른 질문 메모. 표는 db/20261020_question_notes.sql 로 운영 DB 에 먼저 만든다(ddl-auto=validate).
@@ -44,6 +45,9 @@ public class QuestionNote {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    // 시각 칸 셋(resolvedAt·createdAt·updatedAt)은 모두 UTC 로 저장한다(currentTime).
+    // 응답에서는 NoteResponse 가 끝에 Z 를 붙인 시각으로 바꿔 보내고, 앱·도구가 기기 시각(한국 시각)으로 바꿔 보여 준다.
+
     // 해결 표시 시각 — null 이면 아직 못 푼 질문
     private LocalDateTime resolvedAt;
 
@@ -59,9 +63,11 @@ public class QuestionNote {
         this.updatedAt = this.createdAt;
     }
 
-    // 시각 칸은 DATETIME(6)(마이크로초). 더 잘게 넣으면 MySQL 이 반올림해 저장해서
-    // 응답으로 돌려준 값과 다음에 읽은 값이 어긋나므로 미리 마이크로초로 자른다.
+    // 지금 시각(UTC). 서버(JVM)의 시간대 설정과 상관없이 늘 UTC 라서, Railway 시간대가 UTC 든
+    // 나중에 Asia/Seoul 로 바뀌든 저장된 값의 기준이 섞이지 않는다.
+    // 밀리초로 자른다: DATETIME(6) 에 반올림 없이 그대로 들어가 응답 값과 다시 읽은 값이 같고,
+    // 응답 글자(…T13:40:00.123Z)가 자바스크립트 Date 의 표준 형식(소수 3자리)과 같아진다.
     public static LocalDateTime currentTime() {
-        return LocalDateTime.now().truncatedTo(ChronoUnit.MICROS);
+        return LocalDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.MILLIS);
     }
 }
