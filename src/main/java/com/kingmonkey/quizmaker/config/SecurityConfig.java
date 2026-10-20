@@ -40,7 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/manager/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/export/**", "/api/import/**", "/api/images/**").permitAll()
-                        .requestMatchers("/api/sets/**", "/api/questions/**").authenticated()
+                        .requestMatchers("/api/sets/**", "/api/questions/**", "/api/notes/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil),

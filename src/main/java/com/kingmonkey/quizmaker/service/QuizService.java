@@ -9,6 +9,7 @@ import com.kingmonkey.quizmaker.dto.quiz.QuestionSetResponse;
 import com.kingmonkey.quizmaker.entity.Question;
 import com.kingmonkey.quizmaker.entity.QuestionSet;
 import com.kingmonkey.quizmaker.entity.User;
+import com.kingmonkey.quizmaker.repository.QuestionNoteRepository;
 import com.kingmonkey.quizmaker.repository.QuestionRepository;
 import com.kingmonkey.quizmaker.repository.QuestionSetRepository;
 import com.kingmonkey.quizmaker.repository.UserRepository;
@@ -26,6 +27,7 @@ public class QuizService {
     private final QuestionSetRepository questionSetRepository;
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
+    private final QuestionNoteRepository questionNoteRepository;
 
     @Transactional(readOnly = true)
     public List<QuestionSetResponse> getSets(String username) {
@@ -61,6 +63,8 @@ public class QuizService {
         QuestionSet set = findSet(setId);
         checkOwner(set, username, "삭제 권한이 없습니다.");
 
+        // 질문 메모는 지우지 않는다 — 문제집·문항 번호만 비우고 문제집 제목(set_title)은 남긴다
+        questionNoteRepository.detachSet(setId);
         questionSetRepository.delete(set);
     }
 
@@ -98,6 +102,8 @@ public class QuizService {
         Question question = findQuestion(questionId);
         checkOwner(question.getQuestionSet(), username, "삭제 권한이 없습니다.");
 
+        // 질문 메모는 지우지 않는다 — 문항 번호만 비운다
+        questionNoteRepository.detachQuestion(question.getQuestionSet().getId(), questionId);
         questionRepository.delete(question);
     }
 

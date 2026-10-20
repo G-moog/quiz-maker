@@ -5,12 +5,14 @@ import com.kingmonkey.quizmaker.dto.quiz.QuestionRequest;
 import com.kingmonkey.quizmaker.entity.Question;
 import com.kingmonkey.quizmaker.entity.QuestionSet;
 import com.kingmonkey.quizmaker.entity.User;
+import com.kingmonkey.quizmaker.repository.QuestionNoteRepository;
 import com.kingmonkey.quizmaker.repository.QuestionRepository;
 import com.kingmonkey.quizmaker.repository.QuestionSetRepository;
 import com.kingmonkey.quizmaker.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,6 +24,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,6 +36,7 @@ class QuizServiceTest {
     @Mock QuestionSetRepository questionSetRepository;
     @Mock QuestionRepository questionRepository;
     @Mock UserRepository userRepository;
+    @Mock QuestionNoteRepository questionNoteRepository;
     @InjectMocks QuizService quizService;
 
     QuestionSet set;
@@ -117,6 +121,7 @@ class QuizServiceTest {
         assertThatThrownBy(() -> quizService.deleteQuestion(100L, "other"))
                 .hasMessage("삭제 권한이 없습니다.");
         verify(questionRepository, never()).delete(any());
+        verify(questionNoteRepository, never()).detachQuestion(any(), any());
     }
 
     @Test
@@ -126,6 +131,38 @@ class QuizServiceTest {
         quizService.deleteQuestion(100L, "owner");
 
         verify(questionRepository).delete(question);
+    }
+
+    @Test
+    void deleteQuestion_메모는_남기고_문항_번호만_비움() {
+        when(questionRepository.findById(100L)).thenReturn(Optional.of(question));
+
+        quizService.deleteQuestion(100L, "owner");
+
+        verify(questionNoteRepository).detachQuestion(10L, 100L);
+        verify(questionNoteRepository, never()).delete(any());
+    }
+
+    @Test
+    void deleteSet_다른_계정은_거부() {
+        when(questionSetRepository.findById(10L)).thenReturn(Optional.of(set));
+
+        assertThatThrownBy(() -> quizService.deleteSet(10L, "other"))
+                .hasMessage("삭제 권한이 없습니다.");
+        verify(questionSetRepository, never()).delete(any());
+        verify(questionNoteRepository, never()).detachSet(any());
+    }
+
+    @Test
+    void deleteSet_메모는_남기고_문제집_번호만_비움() {
+        when(questionSetRepository.findById(10L)).thenReturn(Optional.of(set));
+
+        quizService.deleteSet(10L, "owner");
+
+        InOrder order = inOrder(questionNoteRepository, questionSetRepository);
+        order.verify(questionNoteRepository).detachSet(10L);
+        order.verify(questionSetRepository).delete(set);
+        verify(questionNoteRepository, never()).delete(any());
     }
 
     @Test
