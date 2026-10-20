@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
-// 문제를 풀다 떠오른 질문 메모. 표는 db/20261020_question_notes.sql 로 운영 DB 에 먼저 만든다(ddl-auto=validate).
+// 문제를 풀다 떠오른 질문 메모. 표는 서버가 켜질 때 db/init/question_notes.sql 이 없을 때만 만든다
+// (ddl-auto=validate 검사보다 먼저). 칸을 바꾸면 그 SQL 과 db/20261020_question_notes.sql 도 같이 고친다.
 @Entity
 @Table(name = "question_notes")
 @Getter
